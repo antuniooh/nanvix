@@ -23,6 +23,10 @@
 #include <string.h>
 #include <unistd.h>
 
+#include <dirent.h>
+#include <errno.h>
+#include <fcntl.h>
+
 /* Software versioning. */
 #define VERSION_MAJOR 1 /* Major version. */
 #define VERSION_MINOR 0 /* Minor version. */
@@ -33,7 +37,7 @@
 static struct
 {
 	char *dirname; /* Directory name. */
-} args = { NULL };
+} args = {NULL};
 
 /*
  * Prints program version and exits.
@@ -42,10 +46,10 @@ static void version(void)
 {
 	printf("mkdir (Nanvix Coreutils) %d.%d\n\n", VERSION_MAJOR, VERSION_MINOR);
 	printf("Copyright(C) 2011-2014 Pedro H. Penna\n");
-	printf("This is free software under the "); 
+	printf("This is free software under the ");
 	printf("GNU General Public License Version 3.\n");
 	printf("There is NO WARRANTY, to the extent permitted by law.\n\n");
-	
+
 	exit(EXIT_SUCCESS);
 }
 
@@ -59,7 +63,7 @@ static void usage(void)
 	printf("Options:\n");
 	printf("  --help    Display this information and exit\n");
 	printf("  --version Display program version and exit\n");
-	
+
 	exit(EXIT_SUCCESS);
 }
 
@@ -68,26 +72,29 @@ static void usage(void)
  */
 static void getargs(int argc, char *const argv[])
 {
-	int i;     /* Loop index.       */
+	int i;	   /* Loop index.       */
 	char *arg; /* Current argument. */
-		
+
 	/* Read command line arguments. */
 	for (i = 1; i < argc; i++)
 	{
 		arg = argv[i];
-		
+
 		/* Parse command line argument. */
-		if (!strcmp(arg, "--help")) {
+		if (!strcmp(arg, "--help"))
+		{
 			usage();
 		}
-		else if (!strcmp(arg, "--version")) {
+		else if (!strcmp(arg, "--version"))
+		{
 			version();
 		}
-		else {
+		else
+		{
 			args.dirname = arg;
 		}
 	}
-	
+
 	/* Missing argument. */
 	if ((args.dirname == NULL))
 	{
@@ -96,19 +103,24 @@ static void getargs(int argc, char *const argv[])
 	}
 }
 
-/*
- * Creates directories
- */
+int fmkdir(char *dirname, mode_t mode)
+{
+	if (mkdir(dirname, mode) < 0)
+	{
+		fprintf(stderr, "error: failed to create a folder\n");
+		return (errno);
+	}
+	return (0);
+}
+
 int main(int argc, char *const argv[])
 {
 	getargs(argc, argv);
-	
-	/* Failed to mkdir(). */
-	if (mkdir(args.dirname, S_IRWXU|S_IRWXG|S_IRWXO) < 0)
+
+	if (fmkdir(args.dirname, S_IRWXU | S_IRWXG | S_IRWXO) < 0)
 	{
 		fprintf(stderr, "mkdir: cannot mkdir()\n");
 		return (EXIT_FAILURE);
 	}
-	
 	return (EXIT_SUCCESS);
 }
