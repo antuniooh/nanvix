@@ -43,10 +43,11 @@
 .PHONY: clear
 .PHONY: nim
 .PHONY: sleep
+.PHONY: sort
 
 # Builds everything.
 all: cat chgrp chmod chown cp echo kill ln login ls mv nice pwd rm stat sync \
-	 touch tsh ps clear nim sleep mkdir
+	 touch tsh ps clear nim sleep mkdir sort
 
 # Builds cat.
 cat: 
@@ -111,7 +112,10 @@ rm:
 # Builds rmdir.
 rmdir: 
 	$(CC) $(CFLAGS) $(LDFLAGS) rmdir/*.c -o $(UBINDIR)/rmdir $(LIBDIR)/libc.a
-	
+
+sort: 
+	$(CC) $(CFLAGS) $(LDFLAGS) sort/*.c -o $(UBINDIR)/sort $(LIBDIR)/libc.a
+
 # Builds stat.
 stat: 
 	$(CC) $(CFLAGS) $(LDFLAGS) stat/*.c -o $(UBINDIR)/stat $(LIBDIR)/libc.a
@@ -171,3 +175,4 @@ clean:
 	@rm -f $(UBINDIR)/clear
 	@rm -f $(UBINDIR)/nim
 	@rm -f $(UBINDIR)/sleep
+	@rm -f $(UBINDIR)/sort
