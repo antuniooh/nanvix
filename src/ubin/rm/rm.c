@@ -22,6 +22,10 @@
 #include <string.h>
 #include <unistd.h>
 
+#include <dirent.h>
+#include <errno.h>
+#include <limits.h>
+
 /* Software versioning. */
 #define VERSION_MAJOR 1 /* Major version. */
 #define VERSION_MINOR 0 /* Minor version. */
@@ -32,7 +36,7 @@
 static struct
 {
 	char *filename; /* File. */
-} args = { NULL };
+} args = {NULL};
 
 /*
  * Prints program version and exits.
@@ -41,10 +45,10 @@ static void version(void)
 {
 	printf("rm (Nanvix Coreutils) %d.%d\n\n", VERSION_MAJOR, VERSION_MINOR);
 	printf("Copyright(C) 2011-2014 Pedro H. Penna\n");
-	printf("This is free software under the "); 
+	printf("This is free software under the ");
 	printf("GNU General Public License Version 3.\n");
 	printf("There is NO WARRANTY, to the extent permitted by law.\n\n");
-	
+
 	exit(EXIT_SUCCESS);
 }
 
@@ -58,7 +62,43 @@ static void usage(void)
 	printf("Options:\n");
 	printf("  --help    Display this information and exit\n");
 	printf("  --version Display program version and exit\n");
+
+	exit(EXIT_SUCCESS);
+}
+
+/*
+ * Removes files of a directory.
+ */
+void rm_files(const char *dirname)
+{
+	DIR *dirp;					 /* Directory.         */
+	struct dirent *dp;			 /* Working directory */
+	char filename[NAME_MAX + 1]; /* file name. */
+
+	char cwd[NAME_MAX + 1];
 	
+	getcwd(cwd, NAME_MAX);
+
+	/* Open directory. */
+	if ((dirp = opendir(dirname)) == NULL)
+	{
+		fprintf(stderr, "rm: cannot open %s\n", dirname);
+		exit (EXIT_FAILURE);
+	}
+
+	chdir(dirname);
+
+	/* Read directory files. */
+	filename[NAME_MAX] = '\0';
+	while ((dp = readdir(dirp)) != NULL)
+	{
+		strncpy(filename, dp->d_name, NAME_MAX);
+		unlink(filename);
+	}
+	closedir(dirp);
+
+	chdir(cwd);
+
 	exit(EXIT_SUCCESS);
 }
 
@@ -67,26 +107,43 @@ static void usage(void)
  */
 static void getargs(int argc, char *const argv[])
 {
-	int i;     /* Loop index.       */
+	int i;	   /* Loop index.       */
 	char *arg; /* Current argument. */
-		
+
 	/* Read command line arguments. */
 	for (i = 1; i < argc; i++)
 	{
 		arg = argv[i];
-		
+
 		/* Parse command line argument. */
-		if (!strcmp(arg, "--help")) {
+		if (!strcmp(arg, "--help"))
+		{
 			usage();
 		}
-		else if (!strcmp(arg, "--version")) {
+		else if (!strcmp(arg, "--version"))
+		{
 			version();
 		}
-		else {
+		else if (!strcmp(arg, "*"))
+		{
+			char pathname[PATH_MAX];
+			getcwd(pathname, PATH_MAX);
+			args.filename = pathname;
+
+			rm_files(pathname);
+		}
+		else if (!strcmp(strrchr(arg, '\0') - 2, "/*"))
+		{
+			char *ptr = strtok(arg, "/");
+			args.filename = ptr;
+			rm_files(ptr);
+		}
+		else
+		{
 			args.filename = arg;
 		}
 	}
-	
+
 	/* Missing argument. */
 	if ((args.filename == NULL))
 	{
@@ -101,13 +158,13 @@ static void getargs(int argc, char *const argv[])
 int main(int argc, char *const argv[])
 {
 	getargs(argc, argv);
-	
+
 	/* Failed to unlink(). */
 	if (unlink(args.filename) < 0)
 	{
 		fprintf(stderr, "rm: cannot unlink()\n");
 		return (EXIT_FAILURE);
 	}
-	
+
 	return (EXIT_SUCCESS);
 }

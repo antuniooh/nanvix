@@ -17,8 +17,12 @@
  * along with Nanvix. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <sys/types.h>
+
 #ifndef FCNTL_H_
 #define FCNTL_H_
+
+#include <sys/types.h>
 
 	/* Access modes. */
 	#define O_ACCMODE 00003 /* Mask.           */
@@ -31,6 +35,9 @@
 	#define O_EXCL	 00200 /* Exclusive use flag.                 */
 	#define O_NOCTTY 00400 /* Do not assign controlling terminal. */
 	#define O_TRUNC	 01000 /* Truncate file.                      */
+
+	/* Folder creation flags. */
+	#define O_CREAT_D 00300 /* Create directory if it does not exist */
 	
 	/* File status flags. */
 	#define O_APPEND   02000 /* Append mode.       */
@@ -55,6 +62,11 @@
 	 * Opens a file.
 	 */
 	extern int open(const char *path, int oflag, ...);
+
+	/*
+	 * Creates a folder.
+	 */
+	extern int mkdir(const char *__file, mode_t mode);
 	
 	/*
 	 * Manipulates file descriptor.
